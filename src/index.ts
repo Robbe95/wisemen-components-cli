@@ -138,19 +138,10 @@ async function main() {
         selectedComponents = await promptForComponents(availableComponents)
       }
 
-      const dir = await promptForDestinationDir(cliConfig)
 
       if (!selectedComponents?.length) {
         logger.warn("No components selected. Nothing to install.")
         process.exit(0)
-      }
-
-      // Create componentPath directory if it doesn't exist.
-      const destinationDir = path.resolve(dir)
-      if (!existsSync(destinationDir)) {
-        const spinner = ora(`Creating ${dir}...`).start()
-        await fs.mkdir(destinationDir, { recursive: true })
-        spinner.succeed()
       }
 
       logger.success(
@@ -173,8 +164,11 @@ async function main() {
             cliConfig.componentDirAlias
           )
           if (!existsSync(path.resolve(fileDir))) {
+            const spinner = ora(`Creating ${fileDir}...`).start()
             logger.info(`Creating ${path.resolve(fileDir)}...`)
             await fs.mkdir(path.resolve(fileDir), { recursive: true })
+            spinner.succeed()
+
           }
 
           const filePath = path.resolve(fileDir, file.name)
@@ -210,23 +204,6 @@ async function promptForComponents(components: Component[]) {
   })
 
   return selectedComponents
-}
-
-async function promptForDestinationDir(cliConfig: Config) {
-  if (!cliConfig.askForDir) {
-    return cliConfig.componentsDirInstallation
-  }
-
-  const { dir } = await prompts([
-    {
-      type: "text",
-      name: "dir",
-      message: "Where would you like to install the component(s)?",
-      initial: cliConfig.componentsDirInstallation,
-    },
-  ])
-
-  return dir
 }
 
 main()
