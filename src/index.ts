@@ -28,7 +28,7 @@ async function main() {
   const projectInfo = await getProjectInfo()
   const cliConfig = await getCliConfig()
 
-  const packageManager = getPackageManager()
+  const packageManager = await getPackageManager()
 
   const program = new Command()
     .name("wisemen-ui")
@@ -40,7 +40,7 @@ async function main() {
     )
 
   program
-    .command("init-test")
+    .command("init")
     .description("Configure your Vue project.")
     .option("-y, --yes", "Skip confirmation prompt.")
     .action(async (options) => {
@@ -111,16 +111,9 @@ async function main() {
   program
     .command("add")
     .description("add components to your project")
+    .option("-o, --overwrite", "Overwrite existing components.")
     .argument("[components...]", "name of components")
-    .action(async (components: string[]) => {
-      logger.warn(
-        "Running the following command will overwrite existing files."
-      )
-      logger.warn(
-        "Make sure you have committed your changes before proceeding."
-      )
-      logger.warn("")
-
+    .action(async (components: string[], options: { overwrite: boolean}) => {
       const availableComponents = await getAvailableComponents()
 
       if (!availableComponents?.length) {
@@ -131,8 +124,12 @@ async function main() {
       }
 
       let selectedComponents = availableComponents.filter((component) =>
-        components.includes(component.component)
+        components.includes(component.name) || components.includes(component.component)
       )
+
+      if(components.includes("all") || components.includes("*")) {
+        selectedComponents = availableComponents
+      }
 
       if (!selectedComponents?.length) {
         selectedComponents = await promptForComponents(availableComponents)
@@ -172,16 +169,25 @@ async function main() {
           }
 
           const filePath = path.resolve(fileDir, file.name)
-    
+          if (existsSync(filePath) && !options.overwrite) {
+            componentSpinner.warn(`${file.name} already exists. Skipping. Use --overwrite to overwrite existing files`)
+            continue
+          }
           await fs.writeFile(filePath, file.content)
         }
 
         // Install dependencies.
         if (component.dependencies?.length) {
+          const spinner = ora(`Installing dependencies...`).start()
+
           await execa(packageManager, [
             packageManager === "npm" ? "install" : "add",
             ...component.dependencies,
           ])
+          spinner.succeed(
+            `Installed ${component.dependencies.length} dependencies.\n${component.dependencies.join(", ")}`
+          )
+
         }
         componentSpinner.succeed(component.name)
       }

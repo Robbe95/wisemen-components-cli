@@ -1,17 +1,25 @@
-export function getPackageManager() {
-  const userAgent = process.env.npm_config_user_agent
 
-  if (!userAgent) {
-    return "npm"
-  }
+import { findUp } from 'find-up'
+import path from 'node:path'
 
-  if (userAgent.startsWith("yarn")) {
-    return "yarn"
-  }
+export interface DetectOptions {
+  autoInstall?: boolean
+  programmatic?: boolean
+  cwd?: string
+}
 
-  if (userAgent.startsWith("pnpm")) {
-    return "pnpm"
-  }
+export type PackageManager = 'npm' | 'pnpm' | 'yarn' | 'bun'
 
-  return "npm"
+export const LOCKS: Record<string, PackageManager> = {
+  'bun.lockb': 'bun',
+  'pnpm-lock.yaml': 'pnpm',
+  'yarn.lock': 'yarn',
+  'package-lock.json': 'npm',
+  'npm-shrinkwrap.json': 'npm',
+} as const
+
+export async function getPackageManager() {
+  const lockPath = await findUp(Object.keys(LOCKS)) ?? 'pnpm-lock.yaml'
+  const agent = LOCKS[path.basename(lockPath)]
+  return agent
 }
