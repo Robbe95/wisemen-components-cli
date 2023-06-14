@@ -11,6 +11,7 @@ const componentSchema = z.object({
   component: z.string(),
   name: z.string(),
   dependencies: z.array(z.string()).optional(),
+  internalDependencies: z.array(z.string()).optional(),
   files: z.array(
     z.object({
       name: z.string(),

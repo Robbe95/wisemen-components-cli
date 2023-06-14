@@ -144,7 +144,10 @@ async function main() {
       logger.success(
         `Installing ${selectedComponents.length} component(s) and dependencies...`
       )
-      for (const component of selectedComponents) {
+
+      // Add all components and their internal dependencies to the list of components to install recursively.
+      const allComponents = new Set(addInternalDependenciesToSelectedComponents( {selectedComponents, availableComponents, addedComponents: selectedComponents}))
+      for (const component of Array.from(allComponents)) {
         const componentSpinner = ora(`${component.name}...`).start()
 
         // Write the files.
@@ -211,5 +214,29 @@ async function promptForComponents(components: Component[]) {
 
   return selectedComponents
 }
+
+
+const addInternalDependenciesToSelectedComponents = 
+  ({selectedComponents, availableComponents, addedComponents}: 
+  { selectedComponents: Component[], availableComponents: Component[], addedComponents: Component[] }) => 
+{
+  let newComponents: Component[] = []
+  selectedComponents.forEach((component) => {
+    component?.internalDependencies?.forEach((dependency) => {
+      const dependencyComponent = availableComponents.find((component) => component.name === dependency)
+      if(dependencyComponent 
+        && !addedComponents.find((component) => component.name === dependencyComponent.name)
+        && !newComponents.find((component) => component.name === dependencyComponent.name)) 
+      {
+        newComponents.push(dependencyComponent)
+      }
+    })
+  })
+  if(newComponents.length > 0) {
+    newComponents = [...selectedComponents, ...newComponents, ...addInternalDependenciesToSelectedComponents({ selectedComponents: newComponents, availableComponents, addedComponents: selectedComponents })]
+  } 
+  return newComponents
+}
+
 
 main()
