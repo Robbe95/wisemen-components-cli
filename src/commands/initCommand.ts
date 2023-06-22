@@ -34,6 +34,10 @@ interface AddInitCommandOptions {
 }
 
 const PROJECT_DEPENDENCIES: string[] = [
+  '@appwise/forms',
+  'class-variance-authority',
+  'tailwind-merge',
+  'zod',
 ]
 
 export const addInitCommand = ({ 
@@ -111,6 +115,7 @@ export const addInitCommand = ({
         options,
         cliConfig,
         packageManager,
+        inRoot: true,
       })
     }
   })

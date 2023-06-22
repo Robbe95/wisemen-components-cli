@@ -7,6 +7,7 @@ import { installComponent } from "../utils/installComponent"
 import { PackageManager } from "../utils/getPackageManager"
 import { addInternalDependencies } from "../utils/addInternalDependencies"
 import { promptForComponents } from "../utils/promptComponents"
+import { GLOBAL_COMPONENTS } from ".."
 
 interface AddAddCommandOptions {
   program: Command;
@@ -30,7 +31,7 @@ export const addAddCommand = ({
   .option("-o, --overwrite", "Overwrite existing components.")
   .argument("[components...]", "name of components")
   .action(async (components: string[], options: { overwrite: boolean}) => {
-    const availableComponents = await getAvailableComponents()
+    const availableComponents = (await getAvailableComponents()).filter(component => !GLOBAL_COMPONENTS.includes(component.name))
 
     if (!availableComponents?.length) {
       logger.error(

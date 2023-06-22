@@ -37,8 +37,10 @@
     "pub:release": "pnpm build && pnpm publish --access public"
   },
   "dependencies": {
-    "@headlessui-float/vue": "^0.11.2",
+    "@appwise/forms": "^0.0.18",
+    "@floating-ui/dom": "^1.4.2",
     "@headlessui/vue": "^1.7.14",
+    "@vueuse/core": "^10.2.0",
     "chalk": "5.2.0",
     "class-variance-authority": "^0.6.0",
     "commander": "^10.0.0",
@@ -50,7 +52,8 @@
     "node-fetch": "^3.3.0",
     "ora": "^6.1.2",
     "prompts": "^2.4.2",
-    "zod": "^3.20.2"
+    "tailwind-merge": "^1.13.2",
+    "zod": "^3.21.4"
   },
   "devDependencies": {
     "@types/fs-extra": "^11.0.1",

@@ -1,6 +1,7 @@
 import { HttpsProxyAgent } from "https-proxy-agent"
 import fetch from "node-fetch"
 import * as z from "zod"
+import { GLOBAL_COMPONENTS } from ".."
 
 const baseUrl = process.env.COMPONENTS_BASE_URL ?? "https://wisemen-components.netlify.app/"
 const agent = process.env.https_proxy
@@ -33,6 +34,7 @@ export async function getAvailableComponents() {
     const components = await response.json()
 
     return componentsSchema.parse(components)
+
   } catch (error) {
     throw new Error(
       `Failed to fetch components from ${baseUrl}/api/components.json.`

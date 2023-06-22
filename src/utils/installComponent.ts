@@ -20,14 +20,15 @@ export interface InstallComponentOptions {
     overwrite: boolean;
   },
   packageManager: PackageManager;
+  inRoot?: boolean;
 }
 
-export const installComponent = async ({ component, cliConfig, options, packageManager }: InstallComponentOptions) => {
+export const installComponent = async ({ component, cliConfig, options, packageManager, inRoot = false }: InstallComponentOptions) => {
   const componentSpinner = ora(`${component.name}...`).start()
 
   // Write the files.
   for (const file of component.files) {
-    const fileDir = `./src/modules/ui/${file.type}/${file.placementDir}`
+    const fileDir = inRoot ? `./src/${file.type}` : `./src/modules/ui/${file.type}/${file.placementDir}`
     // because these are the predefined routes for the utils and components we can
     // use them as a replacer for the defined routes on the installed file.
     file.content = file.content.replace(
