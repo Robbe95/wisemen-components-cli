@@ -1,6 +1,6 @@
 {
   "name": "wisemen-frontend-cli",
-  "version": "0.0.31",
+  "version": "0.0.32",
   "description": "Add components to your apps.",
   "publishConfig": {
     "access": "public"
