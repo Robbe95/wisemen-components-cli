@@ -58,7 +58,7 @@ export const addInitCommand = ({
         type: "confirm",
         name: "proceed",
         message:
-          "Running this command will install dependencies and overwrite your existing tailwind.config.js. Proceed?",
+          "Running this command will install dependencies and overwrite your existing tailwind.config.js / globals.css. Proceed?",
         initial: true,
       })
 
@@ -79,32 +79,19 @@ export const addInitCommand = ({
     }
 
 
+    const STYLES_DIRECTORY = './src/assets/styles'
+
     // Ensure styles directory exists.
-    if (!projectInfo?.appDir) {
-      const stylesDir = projectInfo?.srcDir ? "./src/styles" : "./styles"
-      if (!existsSync(path.resolve(stylesDir))) {
-        await fs.mkdir(path.resolve(stylesDir), { recursive: true })
-      }
+    if (!existsSync(path.resolve(STYLES_DIRECTORY))) {
+      await fs.mkdir(path.resolve(STYLES_DIRECTORY), { recursive: true })
     }
 
     // Update styles.css
-    let stylesDestination = projectInfo?.srcDir
-      ? "./src/styles/globals.css"
-      : "./styles/globals.css"
-    if (projectInfo?.appDir) {
-      stylesDestination = projectInfo?.srcDir
-        ? "./src/app/globals.css"
-        : "./app/globals.css"
-    }
+    let stylesDestination = STYLES_DIRECTORY + '/globals.css'
+
     const stylesSpinner = ora(`Adding styles with CSS variables...`).start()
     await fs.writeFile(stylesDestination, STYLES, "utf8")
     stylesSpinner.succeed()
-
-    // Ensure lib directory exists.
-    const libDir = projectInfo?.srcDir ? "./src/lib" : "./lib"
-    if (!existsSync(path.resolve(libDir))) {
-      await fs.mkdir(path.resolve(libDir), { recursive: true })
-    }
 
     const tailwindDestination = "./tailwind.config.js"
     const tailwindSpinner = ora(`Updating tailwind.config.js...`).start()
