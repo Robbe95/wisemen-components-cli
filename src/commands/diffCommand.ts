@@ -7,17 +7,12 @@ import * as z from "zod"
 import { Component } from "../utils/getComponents"
 import { getInstalledComponents } from "../utils/getInstalledComponents"
 import { promptForComponent, promptForComponents } from "../utils/promptComponents"
+import { printDiff } from "../utils/printDifferences"
+import { diffComponent } from "../utils/getDifferenceComponent"
 
 const updateOptionsSchema = z.object({
   component: z.string().optional(),
 })
-
-
-export interface FileDiff {
-  file: string
-  filePath: string
-  patch: Change[]
-}
 
 export const addDiffCommand = ({ program }: { program: Command }) => {
   program
@@ -30,8 +25,6 @@ export const addDiffCommand = ({ program }: { program: Command }) => {
         component: name,
       })
 
-
-        
       const installedComponents  = await getInstalledComponents()
       
       if(!options.component) {
@@ -61,47 +54,5 @@ export const addDiffCommand = ({ program }: { program: Command }) => {
         logger.info("")
       }
     
-  })
-}
-
-async function diffComponent(
-  component: Component & { files: { localPath: string }[] },
-): Promise<FileDiff[]> {
-  const changes: FileDiff[] = []
-
-  for (const registryFile of component.files) {
-    const localFilePath = registryFile.localPath
-
-    if (!existsSync(localFilePath)) {
-      continue 
-    }
-
-    const fileContent = await fs.readFile(localFilePath, "utf8")
-    const registryContent = registryFile.content
-
-    const patch = diffLines(registryContent, fileContent)
-    if (patch.length > 1) {
-      changes.push({
-        file: registryFile.name,
-        filePath: localFilePath,
-        patch,
-      })
-    }
-  }
-  return changes
-}
-
-async function printDiff(diff: Change[]) {
-  diff.forEach((part) => {
-    if (part) {
-      if (part.added) {
-        return process.stdout.write(chalk.green(part.value))
-      }
-      if (part.removed) {
-        return process.stdout.write(chalk.red(part.value))
-      }
-
-      return process.stdout.write(part.value)
-    }
   })
 }
