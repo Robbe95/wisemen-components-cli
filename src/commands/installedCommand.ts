@@ -25,9 +25,9 @@ export const addInstalledCommand = ({ program }: AddInstalledCommand) => {
           process.exit(0)
         }
         allComponents.forEach((component) => {
-          logger.info(`Component: ${component?.name}`)
+          logger.info(`Component: ${chalk.green(component?.name)}`)
           component?.files.forEach((file) => {
-            logger.info(`File: ${file.localPath}`)
+            logger.info(chalk.magenta(`File: ${chalk.yellow(file.localPath)}`))
           })
         })
         logger.info(
