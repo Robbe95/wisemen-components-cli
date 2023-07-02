@@ -8,16 +8,13 @@ import { PackageManager } from "../utils/getPackageManager"
 import { addInternalDependencies } from "../utils/addInternalDependencies"
 import { promptForComponents } from "../utils/promptComponents"
 import { GLOBAL_COMPONENTS } from ".."
+import { Config } from "../utils/getConfig"
+import ora from "ora"
 
 interface AddAddCommandOptions {
   program: Command;
   packageManager: PackageManager
-  cliConfig: {
-    componentsDirInstallation: string;
-    askForDir: boolean;
-    utilsLocation: string;
-    componentDirAlias: string;
-  },
+  cliConfig: Config | null,
 }
 
 export const addAddCommand = ({ 
@@ -31,6 +28,11 @@ export const addAddCommand = ({
   .option("-o, --overwrite", "Overwrite existing components.")
   .argument("[components...]", "name of components")
   .action(async (components: string[], options: { overwrite: boolean}) => {
+    if(!cliConfig) {
+      logger.error(`No config found. Please run 'init' first.`)
+      return
+    }
+  
     const availableComponents = (await getAvailableComponents()).filter(component => !GLOBAL_COMPONENTS.includes(component.name))
 
     if (!availableComponents?.length) {

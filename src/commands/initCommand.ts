@@ -14,6 +14,10 @@ import { installComponent } from "../utils/installComponent"
 import { PackageManager } from "../utils/getPackageManager"
 import { addInternalDependencies } from "../utils/addInternalDependencies"
 import { GLOBAL_COMPONENTS } from ".."
+import { Config, getConfig, getRawConfig, rawConfigSchema, resolveConfigPaths } from "../utils/getConfig"
+import chalk from "chalk"
+import { getFileAndDirectoryFromPath } from "../utils/getFileAndDirectoryFromPath"
+
 
 interface AddInitCommandOptions {
   program: Command;
@@ -25,12 +29,7 @@ interface AddInitCommandOptions {
     srcComponentsUiDir: boolean;
     componentsUiDir: boolean;
   }
-  cliConfig: {
-    componentsDirInstallation: string;
-    askForDir: boolean;
-    utilsLocation: string;
-    componentDirAlias: string;
-  },
+  cliConfig: Config | null
 }
 
 const PROJECT_DEPENDENCIES: string[] = [
@@ -39,6 +38,100 @@ const PROJECT_DEPENDENCIES: string[] = [
   'tailwind-merge',
   'zod',
 ]
+
+export const DEFAULT_STYLE = "default"
+export const DEFAULT_COMPONENTS = "@/components"
+export const DEFAULT_UTILS = "@/lib/utils"
+export const DEFAULT_TAILWIND_CSS = "src/assets/styles/globals.css"
+export const DEFAULT_TAILWIND_CONFIG = "tailwind.config.js"
+export const DEFAULT_COMPOSABLES = "@/composables"
+export const DEFAULT_TRANSITIONS = "@/transitions"
+export const DEFAULT_ICONS = "@/icons"
+
+const highlight = (text: string) => chalk.cyan(text)
+
+const promptForConfig = async (optionsCwd: any) => {
+  if (!optionsCwd.yes) {
+    const { proceed } = await prompts({
+      type: "confirm",
+      name: "proceed",
+      message:
+        "Running this command will install dependencies and overwrite your existing tailwind.config.js / globals.css. Proceed?",
+      initial: true,
+    })
+
+    if (!proceed) {
+      process.exit(0)
+    }
+  }
+
+  const options = await prompts([
+    {
+      type: "text",
+      name: "tailwindCss",
+      message: `Where is your ${highlight("global CSS")} file?`,
+      initial: DEFAULT_TAILWIND_CSS,
+    },
+    {
+      type: "text",
+      name: "tailwindConfig",
+      message: `Where is your ${highlight("tailwind.config.js")} located?`,
+      initial: DEFAULT_TAILWIND_CONFIG,
+    },
+    {
+      type: "text",
+      name: "components",
+      message: `Configure the import alias for ${highlight("components")}:`,
+      initial: DEFAULT_COMPONENTS,
+    },
+    {
+      type: "text",
+      name: "utils",
+      message: `Configure the import alias for ${highlight("utils")}:`,
+      initial: DEFAULT_UTILS,
+    },
+    {
+      type: "text",
+      name: "composables",
+      message: `Configure the import alias for ${highlight("composables")}:`,
+      initial: DEFAULT_COMPOSABLES,
+    },
+    {
+      type: "text",
+      name: "transitions",
+      message: `Configure the import alias for ${highlight("transitions")}:`,
+      initial: DEFAULT_TRANSITIONS,
+    },
+    {
+      type: "text",
+      name: "icons",
+      message: `Configure the import alias for ${highlight("icons")}:`,
+      initial: DEFAULT_ICONS,
+    },
+  ])
+
+
+  const config = rawConfigSchema.parse({
+    $schema: "https://wisemen-components.netlify.app/api/components.json",
+    style: 'wisemen',
+    tailwind: {
+      config: options.tailwindConfig,
+      css: options.tailwindCss,
+    },
+    aliases: {
+      utils: options.utils,
+      components: options.components,
+      composables: options.composables,
+      transitions: options.transitions,
+      icons: options.icons,
+    },
+  })
+  
+  const targetPath = path.resolve("components.json")
+  await fs.writeFile(targetPath, JSON.stringify(config, null, 2), "utf8")
+
+  return await resolveConfigPaths('./', config)
+}
 
 export const addInitCommand = ({ 
     program, 
@@ -57,20 +150,14 @@ export const addInitCommand = ({
     )
     logger.warn("")
 
-    if (!options.yes) {
-      const { proceed } = await prompts({
-        type: "confirm",
-        name: "proceed",
-        message:
-          "Running this command will install dependencies and overwrite your existing tailwind.config.js / globals.css. Proceed?",
-        initial: true,
-      })
-
-      if (!proceed) {
-        process.exit(0)
-      }
+    const config = await getConfig('/')
+    if(config) {
+      logger.error('Project already configured.')
     }
+    logger.info("No config found. Setting up new config.")
 
+  
+    const configOptions = await promptForConfig(options)
     // Install dependencies.
     if(PROJECT_DEPENDENCIES.length > 0) {
       const dependenciesSpinner = ora(`Installing dependencies...`).start()
@@ -83,25 +170,32 @@ export const addInitCommand = ({
     }
 
 
-    const STYLES_DIRECTORY = './src/assets/styles'
+    const { directory: STYLES_DIRECTORY, fileName: STYLES_FILE } = getFileAndDirectoryFromPath(configOptions.tailwind.css)
+    const { directory: TAILWIND_DIRECTORY, fileName: TAILWIND_FILE } = getFileAndDirectoryFromPath(configOptions.tailwind.config)
 
-    // Ensure styles directory exists.
+    // Add styles.
     if (!existsSync(path.resolve(STYLES_DIRECTORY))) {
       await fs.mkdir(path.resolve(STYLES_DIRECTORY), { recursive: true })
     }
 
-    // Update styles.css
-    let stylesDestination = STYLES_DIRECTORY + '/globals.css'
+    let stylesDestination = STYLES_DIRECTORY + '/' + STYLES_FILE
 
     const stylesSpinner = ora(`Adding styles with CSS variables...`).start()
     await fs.writeFile(stylesDestination, STYLES, "utf8")
     stylesSpinner.succeed()
 
-    const tailwindDestination = "./tailwind.config.js"
+    // Add tailwind config.
+    if (!existsSync(path.resolve(TAILWIND_DIRECTORY))) {
+      await fs.mkdir(path.resolve(TAILWIND_DIRECTORY), { recursive: true })
+    }
+
+    const tailwindDestination = TAILWIND_DIRECTORY + '/' + TAILWIND_FILE
+
     const tailwindSpinner = ora(`Updating tailwind.config.js...`).start()
     await fs.writeFile(tailwindDestination, TAILWIND_CONFIG, "utf8")
     tailwindSpinner.succeed()
 
+    // Add global components.
     const allComponents = await getAvailableComponents()
     const globalComponents = allComponents.filter(component => GLOBAL_COMPONENTS.includes(component.name))
     const globalDependentComponents = new Set(addInternalDependencies(
@@ -113,7 +207,7 @@ export const addInitCommand = ({
       await installComponent({
         component,
         options,
-        cliConfig,
+        cliConfig: configOptions,
         packageManager,
         inRoot: true,
       })

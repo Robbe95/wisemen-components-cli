@@ -8,6 +8,8 @@ const agent = process.env.https_proxy
   ? new HttpsProxyAgent(process.env.https_proxy)
   : undefined
 
+
+export const fileTypeSchema = z.enum(['components', 'composables', 'utils', 'icons', 'transitions'])
 const componentSchema = z.object({
   component: z.string(),
   name: z.string(),
@@ -19,13 +21,13 @@ const componentSchema = z.object({
       dir: z.string(),
       content: z.string(),
       placementDir: z.string(),
-      type: z.string(),
+      type: fileTypeSchema
     })
   ),
 })
 
 export type Component = z.infer<typeof componentSchema>
-
+export type FileType = z.infer<typeof fileTypeSchema>
 const componentsSchema = z.array(componentSchema)
 
 export async function getAvailableComponents() {

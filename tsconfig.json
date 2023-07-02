@@ -9,6 +9,9 @@
     "forceConsistentCasingInFileNames": true,
     "inlineSources": false,
     "moduleResolution": "node",
+    "lib": [
+      "ESNext"
+    ],
     "noUnusedLocals": false,
     "noUnusedParameters": false,
     "preserveWatchOutput": true,

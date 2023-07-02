@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { Command } from "commander"
-import {  getCliConfig } from "./utils/getConfig"
+import {  getConfig } from "./utils/getConfig"
 import { getPackageInfo } from "./utils/getPackageInfo"
 import { getPackageManager } from "./utils/getPackageManager"
 import { getProjectInfo } from "./utils/getProjectInfo"
@@ -20,7 +20,7 @@ export const GLOBAL_COMPONENTS: string[] = [
 async function main() {
   const packageInfo = getPackageInfo()
   const projectInfo = await getProjectInfo()
-  const cliConfig = await getCliConfig()
+  const cliConfig = await getConfig('.')
 
   const packageManager = await getPackageManager()
 

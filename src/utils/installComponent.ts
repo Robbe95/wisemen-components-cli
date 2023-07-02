@@ -6,53 +6,46 @@ import { execa } from "execa"
 import { Component, getAvailableComponents } from "./getComponents"
 import { PackageManager, getPackageManager } from "./getPackageManager"
 import { logger } from "./logger"
-
-
+import { Config } from "./getConfig"
+import { getFileInstallationFolder } from "./getFileInstallationFolder"
+import { replaceFileDirectories } from "./replaceFileDirectories"
 export interface InstallComponentOptions {
   component: Component
-  cliConfig: {
-    componentsDirInstallation: string;
-    askForDir: boolean;
-    utilsLocation: string;
-    componentDirAlias: string;
-  },
+  cliConfig: Config | null
   options: {
     overwrite: boolean;
   },
   packageManager: PackageManager;
   inRoot?: boolean;
 }
+  
 
 export const installComponent = async ({ component, cliConfig, options, packageManager, inRoot = false }: InstallComponentOptions) => {
   const componentSpinner = ora(`${component.name}...`).start()
-
+  if(!cliConfig) {
+    return componentSpinner.fail(`No config found. Please run 'wisemen-ui init' first.`)
+  }
+  
   // Write the files.
   for (const file of component.files) {
-    const fileDir = inRoot ? `./src/${file.type}` : `./src/modules/ui/${file.type}/${file.placementDir}`
-    // because these are the predefined routes for the utils and components we can
-    // use them as a replacer for the defined routes on the installed file.
-    file.content = file.content.replace(
-      "@/lib/utils",
-      cliConfig.utilsLocation
-    )
-    file.content = file.content.replace(
-      `@/components/ui/`,
-      cliConfig.componentDirAlias
-    )
-    if (!existsSync(path.resolve(fileDir))) {
-      const spinner = ora(`Creating ${fileDir}...`).start()
-      logger.info(`Creating ${path.resolve(fileDir)}...`)
-      await fs.mkdir(path.resolve(fileDir), { recursive: true })
-      spinner.succeed()
+    const installationDir = getFileInstallationFolder(file.type, cliConfig)
+    const fileDir = file.placementDir === '' ? `${installationDir}` : `${installationDir}/${file.placementDir}`
+    const resolvedFile = await replaceFileDirectories(file, cliConfig)
+    const spinner = ora(`Creating ${fileDir}/${resolvedFile.name}...`).start()
 
+    if (!existsSync(path.resolve(fileDir))) {
+      await fs.mkdir(path.resolve(fileDir), { recursive: true })
     }
 
-    const filePath = path.resolve(fileDir, file.name)
+    const filePath = path.resolve(fileDir, resolvedFile.name)
     if (existsSync(filePath) && !options.overwrite) {
-      componentSpinner.warn(`${file.name} already exists. Skipping. Use --overwrite to overwrite existing files`)
+      spinner.warn(`${resolvedFile.name} already exists. Skipping. Use --overwrite to overwrite existing files`)
+      spinner.stop()
       continue
     }
-    await fs.writeFile(filePath, file.content)
+    spinner.succeed(`Created ${fileDir}/${resolvedFile.name}`)
+    spinner.stop()
+    await fs.writeFile(filePath, resolvedFile.content)
   }
 
   // Install dependencies.
