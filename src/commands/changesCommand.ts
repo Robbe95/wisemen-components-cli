@@ -10,6 +10,7 @@ import { promptForComponent, promptForComponents } from "../utils/promptComponen
 import { printDiff } from "../utils/printDifferences"
 import { diffComponent } from "../utils/getDifferenceComponent"
 import { installComponent } from "../utils/installComponent"
+import { getConfig } from "../utils/getConfig"
 export const addChangesCommand = ({ program }: { program: Command }) => {
   program
     .command("changes")
@@ -17,6 +18,8 @@ export const addChangesCommand = ({ program }: { program: Command }) => {
     .description("check for changes against the registry")
     .action(async (name, opts) => {
       const installedComponents  = await getInstalledComponents()
+      if(!installedComponents)
+        return
       let noChanges = true
       for(const component of installedComponents) {
         if(!component)

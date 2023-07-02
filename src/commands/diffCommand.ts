@@ -26,6 +26,8 @@ export const addDiffCommand = ({ program }: { program: Command }) => {
       })
 
       const installedComponents  = await getInstalledComponents()
+      if(!installedComponents)
+        return
       
       if(!options.component) {
         const component = await promptForComponent(installedComponents) as Component
