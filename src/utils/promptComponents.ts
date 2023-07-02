@@ -20,3 +20,27 @@ export async function promptForComponents(components: Component[]) {
 
   return selectedComponents
 }
+
+
+export async function promptForComponent(components: (Component | undefined)[]) {
+
+
+  // remove undefined components
+
+  const allComponents = components.filter((component) => component) as Component[]
+  const { component: selectedComponent } = await prompts({
+    type: "autocomplete",
+    name: "component",
+    message: "Which component would you like to check?",
+    hint: "Space to select.",
+    instructions: false,
+    choices: allComponents
+      .filter(component => !GLOBAL_COMPONENTS.includes(component.name))
+      .map((component) => ({
+        title: component?.name,
+        value: component,
+      })),
+  })
+
+  return selectedComponent
+}

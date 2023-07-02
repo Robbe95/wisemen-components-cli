@@ -7,6 +7,9 @@ import { getProjectInfo } from "./utils/getProjectInfo"
 
 import { addInitCommand } from "./commands/initCommand"
 import { addAddCommand } from "./commands/addCommand"
+import { addInstalledCommand } from "./commands/installedCommand"
+import { addDiffCommand } from "./commands/diffCommand"
+import { addChangesCommand } from "./commands/changesCommand"
 
 
 process.on("SIGINT", () => process.exit(0))
@@ -35,6 +38,9 @@ async function main() {
 
   addInitCommand({ program, packageManager, projectInfo, cliConfig })
   addAddCommand({ program, packageManager, cliConfig })
+  addInstalledCommand({ program })
+  addDiffCommand({ program })
+  addChangesCommand({ program })
 
   program.parse()
 }
