@@ -41,7 +41,7 @@ const PROJECT_DEPENDENCIES: string[] = [
 
 export const DEFAULT_STYLE = "default"
 export const DEFAULT_COMPONENTS = "@/components"
-export const DEFAULT_UTILS = "@/lib/utils"
+export const DEFAULT_UTILS = "@/utils"
 export const DEFAULT_TAILWIND_CSS = "src/assets/styles/globals.css"
 export const DEFAULT_TAILWIND_CONFIG = "tailwind.config.js"
 export const DEFAULT_COMPOSABLES = "@/composables"

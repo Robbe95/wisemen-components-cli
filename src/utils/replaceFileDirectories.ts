@@ -3,9 +3,9 @@ import { Config } from "./getConfig"
 import { unresolveImport } from "./resolveImport"
 
 const defaultDirectories = {
-  components: "@/modules/ui/components",
+  components: "@/components",
   utils: "@/utils",
-  composables: "@/modules/ui/composables",
+  composables: "@/composables",
   transitions: "@/transitions",
   icons: "@/icons",
 }
