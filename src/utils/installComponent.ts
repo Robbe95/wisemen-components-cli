@@ -20,7 +20,7 @@ export interface InstallComponentOptions {
 }
   
 
-export const installComponent = async ({ component, cliConfig, options, packageManager, inRoot = false }: InstallComponentOptions) => {
+export const installComponent = async ({ component, cliConfig, options, packageManager }: InstallComponentOptions) => {
   const componentSpinner = ora(`${component.name}...`).start()
   if(!cliConfig) {
     return componentSpinner.fail(`No config found. Please run 'wisemen-ui init' first.`)

@@ -1,6 +1,5 @@
 import prompts from "prompts"
 import { Component } from "./getComponents"
-import { GLOBAL_COMPONENTS } from ".."
 
 export async function promptForComponents(components: Component[]) {
 
@@ -11,7 +10,6 @@ export async function promptForComponents(components: Component[]) {
     hint: "Space to select. A to select all. I to invert selection.",
     instructions: false,
     choices: components
-      .filter(component => !GLOBAL_COMPONENTS.includes(component.name))
       .map((component) => ({
         title: component.name,
         value: component,
@@ -23,10 +21,6 @@ export async function promptForComponents(components: Component[]) {
 
 
 export async function promptForComponent(components: (Component | undefined)[]) {
-
-
-  // remove undefined components
-
   const allComponents = components.filter((component) => component) as Component[]
   const { component: selectedComponent } = await prompts({
     type: "autocomplete",
@@ -35,7 +29,6 @@ export async function promptForComponent(components: (Component | undefined)[]) 
     hint: "Space to select.",
     instructions: false,
     choices: allComponents
-      .filter(component => !GLOBAL_COMPONENTS.includes(component.name))
       .map((component) => ({
         title: component?.name,
         value: component,

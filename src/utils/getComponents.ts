@@ -1,15 +1,14 @@
 import { HttpsProxyAgent } from "https-proxy-agent"
 import fetch from "node-fetch"
 import * as z from "zod"
-import { GLOBAL_COMPONENTS } from ".."
+import { baseUrl } from "./staticVariables"
 
-const baseUrl = process.env.COMPONENTS_BASE_URL ?? "https://wisemen-components.netlify.app/"
 const agent = process.env.https_proxy
   ? new HttpsProxyAgent(process.env.https_proxy)
   : undefined
 
 
-export const fileTypeSchema = z.enum(['components', 'composables', 'utils', 'icons', 'transitions'])
+export const fileTypeSchema = z.enum(['components', 'composables', 'utils', 'icons', 'transitions', 'config', 'styles'])
 const componentSchema = z.object({
   component: z.string(),
   name: z.string(),
@@ -40,6 +39,36 @@ export async function getAvailableComponents() {
   } catch (error) {
     throw new Error(
       `Failed to fetch components from ${baseUrl}/api/components.json.`
+    )
+  }
+}
+
+export async function getGlobalConfig() {
+  try {
+    const response = await fetch(`${baseUrl}/api/globalConfig.json`, { agent })
+
+    const components = await response.json()
+    console.log(components)
+
+    return componentsSchema.parse(components)
+
+  } catch (error) {
+    throw new Error(
+      `Failed to fetch config from ${baseUrl}/api/globalConfig.json.`
+    )
+  }
+}
+
+export async function getGlobalComponents() {
+  try {
+    const response = await fetch(`${baseUrl}/api/globalComponents.json`, { agent })
+    const components = await response.json()
+
+    return componentsSchema.parse(components)
+
+  } catch (error) {
+    throw new Error(
+      `Failed to fetch components from ${baseUrl}/api/globalComponents.json.`
     )
   }
 }

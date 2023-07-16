@@ -19,16 +19,14 @@ export const rawConfigSchema = z
   .object({
     $schema: z.string().optional(),
     style: z.string(),
-    tailwind: z.object({
-      config: z.string(),
-      css: z.string(),
-    }),
     aliases: z.object({
       components: z.string(),
       utils: z.string(),
       composables: z.string(),
       transitions: z.string(),
       icons: z.string(),
+      styles: z.string(),
+      config: z.string(),
     }),
   })
   .strict()
@@ -37,8 +35,8 @@ export type RawConfig = z.infer<typeof rawConfigSchema>
 
 export const configSchema = rawConfigSchema.extend({
   resolvedPaths: z.object({
-    tailwindConfig: z.string(),
-    tailwindCss: z.string(),
+    config: z.string(),
+    styles: z.string(),
     utils: z.string(),
     components: z.string(),
     composables: z.string(),
@@ -71,13 +69,13 @@ export async function resolveConfigPaths(cwd: string, config: RawConfig) {
   return configSchema.parse({
     ...config,
     resolvedPaths: {
-      tailwindConfig: path.resolve(cwd, config.tailwind.config),
-      tailwindCss: path.resolve(cwd, config.tailwind.css),
-      utils: await resolveImport(config.aliases["utils"]),
-      components: await resolveImport(config.aliases["components"]),
-      composables: await resolveImport(config.aliases["composables"]),
-      icons: await resolveImport(config.aliases["icons"]),
-      transitions: await resolveImport(config.aliases["transitions"]),
+      config: path.resolve(cwd, config.aliases.config),
+      styles: path.resolve(cwd, config.aliases.styles),
+      utils: await resolveImport(config.aliases.utils),
+      components: await resolveImport(config.aliases.components),
+      composables: await resolveImport(config.aliases.composables),
+      icons: await resolveImport(config.aliases.icons),
+      transitions: await resolveImport(config.aliases.transitions),
     },
   })
 }

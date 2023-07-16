@@ -7,7 +7,6 @@ import { installComponent } from "../utils/installComponent"
 import { PackageManager } from "../utils/getPackageManager"
 import { addInternalDependencies } from "../utils/addInternalDependencies"
 import { promptForComponents } from "../utils/promptComponents"
-import { GLOBAL_COMPONENTS } from ".."
 import { Config } from "../utils/getConfig"
 import ora from "ora"
 
@@ -33,7 +32,7 @@ export const addAddCommand = ({
       return
     }
   
-    const availableComponents = (await getAvailableComponents()).filter(component => !GLOBAL_COMPONENTS.includes(component.name))
+    const availableComponents = await getAvailableComponents()
 
     if (!availableComponents?.length) {
       logger.error(

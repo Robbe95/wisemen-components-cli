@@ -6,17 +6,13 @@ import { execa } from "execa"
 import ora from "ora"
 import prompts from "prompts"
 
-import { getAvailableComponents } from "../utils/getComponents"
+import { getGlobalComponents, getGlobalConfig } from "../utils/getComponents"
 import { logger } from "../utils/logger"
 
-import {  TAILWIND_CONFIG, STYLES } from "../templates"
 import { installComponent } from "../utils/installComponent"
 import { PackageManager } from "../utils/getPackageManager"
-import { addInternalDependencies } from "../utils/addInternalDependencies"
-import { GLOBAL_COMPONENTS } from ".."
-import { Config, getConfig, getRawConfig, rawConfigSchema, resolveConfigPaths } from "../utils/getConfig"
+import { Config, getConfig, rawConfigSchema, resolveConfigPaths } from "../utils/getConfig"
 import chalk from "chalk"
-import { getFileAndDirectoryFromPath } from "../utils/getFileAndDirectoryFromPath"
 
 
 interface AddInitCommandOptions {
@@ -39,11 +35,13 @@ const PROJECT_DEPENDENCIES: string[] = [
   'zod',
 ]
 
+const baseUrl = process.env.COMPONENTS_BASE_URL ?? "https://wisemen-components.netlify.app/"
+
 export const DEFAULT_STYLE = "default"
 export const DEFAULT_COMPONENTS = "@/components"
 export const DEFAULT_UTILS = "@/utils"
-export const DEFAULT_TAILWIND_CSS = "src/assets/styles/globals.css"
-export const DEFAULT_TAILWIND_CONFIG = "tailwind.config.js"
+export const DEFAULT_STYLES = "src/assets/styles"
+export const DEFAULT_CONFIG = "./"
 export const DEFAULT_COMPOSABLES = "@/composables"
 export const DEFAULT_TRANSITIONS = "@/transitions"
 export const DEFAULT_ICONS = "@/icons"
@@ -68,15 +66,15 @@ const promptForConfig = async (optionsCwd: any) => {
   const options = await prompts([
     {
       type: "text",
-      name: "tailwindCss",
-      message: `Where is your ${highlight("global CSS")} file?`,
-      initial: DEFAULT_TAILWIND_CSS,
+      name: "styles",
+      message: `Where is your ${highlight("style")} files?`,
+      initial: DEFAULT_STYLES,
     },
     {
       type: "text",
-      name: "tailwindConfig",
-      message: `Where is your ${highlight("tailwind.config.js")} located?`,
-      initial: DEFAULT_TAILWIND_CONFIG,
+      name: "config",
+      message: `Where is your ${highlight("config files")}, like tailwind.config.js located?`,
+      initial: DEFAULT_CONFIG,
     },
     {
       type: "text",
@@ -114,16 +112,14 @@ const promptForConfig = async (optionsCwd: any) => {
   const config = rawConfigSchema.parse({
     $schema: "https://wisemen-components.netlify.app/api/components.json",
     style: 'wisemen',
-    tailwind: {
-      config: options.tailwindConfig,
-      css: options.tailwindCss,
-    },
     aliases: {
       utils: options.utils,
       components: options.components,
       composables: options.composables,
       transitions: options.transitions,
       icons: options.icons,
+      styles: options.styles,
+      config: options.config,
     },
   })
   
@@ -136,8 +132,6 @@ const promptForConfig = async (optionsCwd: any) => {
 export const addInitCommand = ({ 
     program, 
     packageManager,
-    projectInfo,
-    cliConfig
   }: AddInitCommandOptions) => {
 
   program
@@ -170,40 +164,20 @@ export const addInitCommand = ({
     }
 
 
-    const { directory: STYLES_DIRECTORY, fileName: STYLES_FILE } = getFileAndDirectoryFromPath(configOptions.tailwind.css)
-    const { directory: TAILWIND_DIRECTORY, fileName: TAILWIND_FILE } = getFileAndDirectoryFromPath(configOptions.tailwind.config)
+    const globalConfig = await getGlobalConfig()
+    const globalComponents = await getGlobalComponents()
 
-    // Add styles.
-    if (!existsSync(path.resolve(STYLES_DIRECTORY))) {
-      await fs.mkdir(path.resolve(STYLES_DIRECTORY), { recursive: true })
+    for (const component of Array.from(globalConfig)) {
+      await installComponent({
+        component,
+        options,
+        cliConfig: configOptions,
+        packageManager,
+        inRoot: true,
+      })
     }
 
-    let stylesDestination = STYLES_DIRECTORY + '/' + STYLES_FILE
-
-    const stylesSpinner = ora(`Adding styles with CSS variables...`).start()
-    await fs.writeFile(stylesDestination, STYLES, "utf8")
-    stylesSpinner.succeed()
-
-    // Add tailwind config.
-    if (!existsSync(path.resolve(TAILWIND_DIRECTORY))) {
-      await fs.mkdir(path.resolve(TAILWIND_DIRECTORY), { recursive: true })
-    }
-
-    const tailwindDestination = TAILWIND_DIRECTORY + '/' + TAILWIND_FILE
-
-    const tailwindSpinner = ora(`Updating tailwind.config.js...`).start()
-    await fs.writeFile(tailwindDestination, TAILWIND_CONFIG, "utf8")
-    tailwindSpinner.succeed()
-
-    // Add global components.
-    const allComponents = await getAvailableComponents()
-    const globalComponents = allComponents.filter(component => GLOBAL_COMPONENTS.includes(component.name))
-    const globalDependentComponents = new Set(addInternalDependencies(
-       {selectedComponents: globalComponents, availableComponents: allComponents, addedComponents: []}
-      )
-    )
-
-    for (const component of Array.from(globalDependentComponents)) {
+    for (const component of Array.from(globalComponents)) {
       await installComponent({
         component,
         options,

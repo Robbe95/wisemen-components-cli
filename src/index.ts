@@ -15,10 +15,6 @@ import { addChangesCommand } from "./commands/changesCommand"
 process.on("SIGINT", () => process.exit(0))
 process.on("SIGTERM", () => process.exit(0))
 
-export const GLOBAL_COMPONENTS: string[] = [
-  'Transitions',
-  'Icons',
-]
 // node ./dist/index.js add button
 async function main() {
   const packageInfo = getPackageInfo()
@@ -35,7 +31,6 @@ async function main() {
       "-v, --version",
       "display the version number"
     )
-
   addInitCommand({ program, packageManager, projectInfo, cliConfig })
   addAddCommand({ program, packageManager, cliConfig })
   addInstalledCommand({ program })
