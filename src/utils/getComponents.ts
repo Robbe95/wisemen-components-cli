@@ -48,8 +48,6 @@ export async function getGlobalConfig() {
     const response = await fetch(`${baseUrl}/api/globalConfig.json`, { agent })
 
     const components = await response.json()
-    console.log(components)
-
     return componentsSchema.parse(components)
 
   } catch (error) {
