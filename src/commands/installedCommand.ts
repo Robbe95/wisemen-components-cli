@@ -16,7 +16,7 @@ export const addInstalledCommand = ({ program }: AddInstalledCommand) => {
     .action(async (name, opts) => {
       try {
         const allComponents = await getInstalledComponents()
-        if (allComponents.length === 0) {
+        if (allComponents?.length === 0) {
           logger.info(
             `No components installed. Run ${chalk.green(
               `add`
@@ -24,7 +24,7 @@ export const addInstalledCommand = ({ program }: AddInstalledCommand) => {
           )
           process.exit(0)
         }
-        allComponents.forEach((component) => {
+        allComponents?.forEach((component) => {
           logger.info(`Component: ${chalk.green(component?.name)}`)
           component?.files.forEach((file) => {
             logger.info(chalk.magenta(`File: ${chalk.yellow(file.localPath)}`))

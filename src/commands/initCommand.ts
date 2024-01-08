@@ -13,7 +13,7 @@ import { installComponent } from "../utils/installComponent"
 import { PackageManager } from "../utils/getPackageManager"
 import { Config, getConfig, rawConfigSchema, resolveConfigPaths } from "../utils/getConfig"
 import chalk from "chalk"
-
+import { baseUrl } from "../utils/staticVariables"
 
 interface AddInitCommandOptions {
   program: Command;
@@ -29,22 +29,21 @@ interface AddInitCommandOptions {
 }
 
 const PROJECT_DEPENDENCIES: string[] = [
-  '@appwise/forms',
-  'class-variance-authority',
+  'formango',
+  'cva@beta',
   'tailwind-merge',
   'zod',
 ]
 
-const baseUrl = process.env.COMPONENTS_BASE_URL ?? "https://wisemen-components.netlify.app/"
-
 export const DEFAULT_STYLE = "default"
-export const DEFAULT_COMPONENTS = "@/components"
-export const DEFAULT_UTILS = "@/utils"
+export const DEFAULT_COMPONENTS = "@/ui/components"
+export const DEFAULT_UTILS = "@/ui/utils"
 export const DEFAULT_STYLES = "src/assets/styles"
 export const DEFAULT_CONFIG = "./"
-export const DEFAULT_COMPOSABLES = "@/composables"
-export const DEFAULT_TRANSITIONS = "@/transitions"
-export const DEFAULT_ICONS = "@/icons"
+export const DEFAULT_COMPOSABLES = "@/ui/composables"
+export const DEFAULT_TRANSITIONS = "@/ui/transitions"
+export const DEFAULT_ICONS = "@/ui/icons"
+export const DEFAULT_TYPES = "@/ui/types"
 
 const highlight = (text: string) => chalk.cyan(text)
 
@@ -84,6 +83,12 @@ const promptForConfig = async (optionsCwd: any) => {
     },
     {
       type: "text",
+      name: "types",
+      message: `Configure the import alias for ${highlight("types")}:`,
+      initial: DEFAULT_TYPES,
+    },
+    {
+      type: "text",
       name: "utils",
       message: `Configure the import alias for ${highlight("utils")}:`,
       initial: DEFAULT_UTILS,
@@ -110,7 +115,7 @@ const promptForConfig = async (optionsCwd: any) => {
 
 
   const config = rawConfigSchema.parse({
-    $schema: "https://wisemen-components.netlify.app/api/components.json",
+    $schema: baseUrl,
     style: 'wisemen',
     aliases: {
       utils: options.utils,
@@ -120,6 +125,7 @@ const promptForConfig = async (optionsCwd: any) => {
       icons: options.icons,
       styles: options.styles,
       config: options.config,
+      types: options.types,
     },
   })
   

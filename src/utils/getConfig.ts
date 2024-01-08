@@ -27,6 +27,7 @@ export const rawConfigSchema = z
       icons: z.string(),
       styles: z.string(),
       config: z.string(),
+      types: z.string(),
     }),
   })
   .strict()
@@ -42,6 +43,7 @@ export const configSchema = rawConfigSchema.extend({
     composables: z.string(),
     icons: z.string(),
     transitions: z.string(),
+    types: z.string(),
   }),
 })
 
@@ -75,6 +77,7 @@ export async function resolveConfigPaths(cwd: string, config: RawConfig) {
       components: await resolveImport(config.aliases.components),
       composables: await resolveImport(config.aliases.composables),
       icons: await resolveImport(config.aliases.icons),
+      types: await resolveImport(config.aliases.types),
       transitions: await resolveImport(config.aliases.transitions),
     },
   })

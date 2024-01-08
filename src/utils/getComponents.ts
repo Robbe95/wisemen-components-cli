@@ -8,7 +8,7 @@ const agent = process.env.https_proxy
   : undefined
 
 
-export const fileTypeSchema = z.enum(['components', 'composables', 'utils', 'icons', 'transitions', 'config', 'styles'])
+export const fileTypeSchema = z.enum(['components', 'composables', 'utils', 'icons', 'transitions', 'config', 'styles', 'types'])
 const componentSchema = z.object({
   component: z.string(),
   name: z.string(),
