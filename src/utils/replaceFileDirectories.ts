@@ -9,6 +9,7 @@ const defaultDirectories = {
   transitions: "@/transitions",
   icons: "@/icons",
   styles: "@/styles",
+  types: "@/types",
 }
 
 export const replaceFileDirectories = async (file: Component['files'][number], config: Config) => {
